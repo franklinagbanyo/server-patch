@@ -1,0 +1,31 @@
+---
+- name: Update and Reboot Servers
+  hosts: ws
+  become: true
+  tasks:
+    - name: Update YUM (Red Hat/CentOS)
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == 'RedHat'
+    
+    - name: Update APT (Debian/Ubuntu)
+      apt:
+        update_cache: true
+        upgrade: dist
+      when: ansible_os_family == 'Debian'
+
+    - name: Reboot the server
+      reboot:
+      async: 1
+      poll: 0
+      ignore_errors: true
+    
+    - name: Wait for server to come back up
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 22  
+        state: started
+        timeout: 300  
+      become: false
+      delegate_to: localhost

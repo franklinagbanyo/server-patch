@@ -1,0 +1,40 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: true
+  ignore_errors: true
+  tasks:
+    #  - name: Download artifacts from nexus
+    #    get_url:
+    #      url:  http://198.58.119.40:8081/repository/prof-repo/bioMedical-0.0.6-SNAPSHOT.jar
+    #     dest: /tmp/app.jar
+    #     url_username: admin
+    #     url_password: devops
+      # - name: set the python interpreter
+      #   set_fact:
+      #     discovered_interpreter_python:  "/usr/bin/python3"
+     - name: install python3
+       package:
+          name: python3
+          state: present
+     
+     - name: Download artifacts from nexus
+       uri:
+           url:  http://198.58.119.40:8081/repository/prof-repo/bioMedical-0.0.6-SNAPSHOT.jar
+           dest: /tmp/uri.jar
+           method: GET
+           url_username: admin
+           url_password: devops
+     - name: Install lxml
+       package:
+          name: python3-lxml
+          state: present 
+     - name: download artifact
+       maven_artifact:
+         group_id: qa
+         version: 0.0.7-SNAPSHOT
+         artifact_id: bioMedical
+         repository_url: 'http://198.58.119.40:8081/repository/prof-repo'
+         username: admin
+         password: devops
+         dest: /tmp/maven.jar

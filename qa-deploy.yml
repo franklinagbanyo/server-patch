@@ -1,0 +1,38 @@
+---
+- name: Deploy Spring Boot App on QA Server
+  hosts: qa
+  become: yes
+  vars:
+    nexus_username: admin
+    nexus_password: devops
+    artifact_version: 0.0.6-SNAPSHOT
+    artifact_url: http://198.58.119.40:8081/repository/prof-repo/bioMedical-{{ artifact_version }}.jar
+
+  tasks:
+    - name: Delete old artifact
+      file:
+        path: /opt/qa/spg/
+        state: absent
+      register: deleted_artifact
+
+    - name: Check if an app is running on port 8082 and kill it
+      shell: "lsof -ti :8082 | xargs -r kill -9"
+      async: 600
+      poll: 0
+      ignore_errors: yes
+
+    - name: Create the target directory if it doesn't exist
+      file:
+        path: /opt/qa/spg/
+        state: directory
+
+    - name: Download the new artifact from Nexus
+      get_url:
+        url: "{{ artifact_url }}"
+        dest: "/opt/qa/spg/bioMedical-{{ artifact_version }}.jar"
+        url_username: "{{ nexus_username }}"
+        url_password: "{{ nexus_password }}"
+
+    - name: Bring up the app in the background
+      shell: nohup java -jar /opt/qa/spg/bioMedical-{{ artifact_version }}.jar > /opt/qa/spg.log 2>&1 &
+      

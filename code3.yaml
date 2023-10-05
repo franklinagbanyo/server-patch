@@ -1,0 +1,20 @@
+
+
+---
+- hosts: all
+  become: yes
+  gather_facts: false
+  ignore_errors: true
+  tasks:
+     - name: Check uptime
+       command: uptimes
+       register: uptime_output
+     - name: Create user
+       user:
+         name: serge 
+         comment: Serge admin
+       when: uptime_output.rc != 100
+     - name: Display output
+       debug:
+         var: uptime_output
+         

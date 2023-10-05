@@ -1,0 +1,15 @@
+---
+- hosts: ws
+  become: yes
+  gather_facts: false
+  ignore_errors: true
+  tasks:
+     - name: Modify config file
+       lineinfile:
+          path: /etc/selinux/semanage.conf
+          #regexp: '^module-store ='
+          insertafter: '^module-store ='
+          line: module-store = serge
+          state: absent 
+          #create: yes
+# This line is to test jenkins ci/cd build for yml files.

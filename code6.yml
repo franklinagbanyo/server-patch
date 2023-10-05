@@ -1,0 +1,78 @@
+---
+- name: Setup Prometheus
+  hosts: prometheus
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: modify config 
+      blockinfile:
+        dest: /tmp/prometheus.yml
+        block: |
+          - job_name: 'node3'
+              scrape_interval: 5s       
+              static_configs:
+              - targets: ['localhost:9090']
+      tags:
+        file
+    - name: Insert Indented Lines into File
+      ansible.builtin.command: >
+          sed -i '/# Ansible managed block/,$ {
+            s/^- job_name: 'node3'/      - job_name: 'node3'/
+          }' /tmp/prometheus.yml
+      tags:
+         file
+    - name: Create Prometheus User
+      user:
+        name: prometheus
+        createhome: no
+        shell: /bin/false
+
+    - name: Create Prometheus Directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: prometheus
+        group: prometheus
+      loop:
+        - /etc/prometheus
+        - /var/lib/prometheus
+
+    - name: Download Prometheus
+      get_url:
+        url: https://github.com/prometheus/prometheus/releases/download/v2.13.1/prometheus-2.13.1.linux-amd64.tar.gz
+        dest: /tmp/prometheus-2.13.1.linux-amd64.tar.gz
+
+    - name: Extract Prometheus
+      ansible.builtin.unarchive:
+        src: /tmp/prometheus-2.13.1.linux-amd64.tar.gz
+        dest: /var/lib/prometheus/
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+
+    - name: Move Prometheus Configuration
+      command: mv /var/lib/prometheus/prometheus.yml /etc/prometheus/
+
+    - name: Create Symbolic Link
+      file:
+        src: /var/lib/prometheus/prometheus
+        dest: /usr/local/bin/prometheus
+        state: link
+
+    - name: Copy Prometheus Service File
+      copy:
+        src: prometheus.service
+        dest: /usr/lib/systemd/system/prometheus.service
+      notify:
+        - Reload Prometheus Service
+
+    - name: Enable and Start Prometheus Service
+      systemd:
+        name: prometheus
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: Reload Prometheus Service
+      systemd:
+        name: prometheus
+        state: reloaded

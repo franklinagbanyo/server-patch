@@ -1,0 +1,35 @@
+---
+- name: Configure QA Server
+  hosts: qa  # Replace with the appropriate target hosts or group
+  become: yes  # Run tasks with sudo
+
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - lsof
+        - wget
+        - passwd
+        - docker
+        - unzip
+
+    - name: Install Java 11
+      yum:
+        name: java-11*
+        state: present
+
+    - name: Create directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - /opt/qa/spg
+        - /opt/qa/spg/spg.log
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes

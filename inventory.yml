@@ -1,0 +1,30 @@
+[ws]
+172.31.25.63
+
+[db]
+172.31.25.141
+
+#[qa]
+#172.31.16.58
+
+#[nv:children]
+#qa
+#db
+
+# [prometheus]
+# 172.31.46.157
+[ws:vars]
+ansible_ssh_private_key_file=~/ansible-key.pem
+ansible_user= ec2-user
+
+[db:vars]
+ansible_ssh_private_key_file=~/ansible-key.pem
+ansible_user= ubuntu
+ansible_python_interpreter=/usr/bin/python3
+
+# [qa:vars]
+# ansible_ssh_private_key_file=~/ansible-key.pem
+# ansible_user= ec2-user
+# [prometheus:vars]
+# ansible_ssh_private_key_file=~/ansible-key.pem
+# ansible_user= ec2-user
